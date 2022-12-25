@@ -1,6 +1,6 @@
 import os
 from dataclasses import dataclass
-from typing import Any, Callable, Type, TypeVar
+from typing import Any, Callable, TypeVar
 
 from .convertors import conv_bool
 from .errors import ConversionError, UnloadedVariables
@@ -18,11 +18,7 @@ class _EnvVar:
 
 class EnvVar:
     def __init__(
-        self,
-        *,
-        default: Any | Type[MISSING] = MISSING,
-        converter: Callable[[str], T] | None = None,
-        env_name: str | None = None
+        self, *, default: Any = MISSING, converter: Callable[[str], T] | None = None, env_name: str | None = None
     ):
         """Environment variable class to configure variable conversion and loading.
 
