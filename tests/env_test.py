@@ -2,7 +2,7 @@ import os
 
 import pytest
 
-from exenenv import ConversionError, EnvironmentProfile, UnloadedVariables
+from exenenv import ConversionError, EnvironmentProfile, EnvVar, UnloadedVariables
 
 
 def test_load():
@@ -42,3 +42,27 @@ def test_bad_type():
     env = Environment()
     with pytest.raises(ConversionError):
         env.load()
+
+
+def test_bool():
+    class Environment(EnvironmentProfile):
+        BOOL: bool
+
+    os.environ.update({"BOOL": "true"})
+    env = Environment()
+    env.load()
+    assert env.BOOL is True
+
+
+def test_envvar():
+    class Environment(EnvironmentProfile):
+        DEFAULT_VAR: int = EnvVar(default=10)
+        alt_name_var: int = EnvVar(env_name="VAR")
+        CONVERTER_VAR: list[str] = EnvVar(converter=lambda x: x.split(","))
+
+    os.environ.update({"VAR": "40", "CONVERTER_VAR": "one,two"})
+    env = Environment()
+    env.load()
+    assert env.DEFAULT_VAR == 10
+    assert env.alt_name_var == 40
+    assert env.CONVERTER_VAR == ["one", "two"]

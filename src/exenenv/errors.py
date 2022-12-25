@@ -3,7 +3,7 @@ from typing import Any, Callable, Iterable
 
 class ConversionError(Exception):
     def __init__(self, value: Any, _type: Callable):
-        super().__init__("Cannot convert `%s` to type `%s`" % (value, _type))
+        super().__init__("Failed to convert `%s` with function `%s`" % (value, _type.__name__))
 
 
 class UnloadedVariables(Exception):
