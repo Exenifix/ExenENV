@@ -1,5 +1,4 @@
 import os
-from dataclasses import dataclass
 from typing import Any, Callable, TypeVar
 
 from .convertors import conv_bool
@@ -7,13 +6,6 @@ from .errors import ConversionError, UnloadedVariables
 
 T = TypeVar("T")
 MISSING = object()
-
-
-@dataclass
-class _EnvVar:
-    name: str
-    default_value: Any
-    type: Callable
 
 
 class EnvVar:
@@ -39,7 +31,7 @@ class EnvVar:
 
 
 class EnvironmentProfile:
-    _env_vars: list[_EnvVar]
+    _env_vars: list[EnvVar]
 
     def __init_subclass__(cls, **kwargs) -> None:
         cls._env_vars: dict[str, EnvVar] = {}
