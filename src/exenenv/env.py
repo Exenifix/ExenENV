@@ -70,7 +70,8 @@ class EnvironmentProfile:
                 setattr(cls, name, var.default)
 
     def load(self, raise_exc: bool = True) -> set[str]:
-        """Load environment variables from `os.environ` into class and ensure presence of required ones.
+        """
+        Load environment variables from `os.environ` into class and ensure presence of required ones.
 
         :param raise_exc: Whether to raise `UnloadedVariables` if required variables are not set.
 
