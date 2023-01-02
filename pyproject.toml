@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "exenenv"
-version = "1.1"
+version = "1.2"
 description = "Environment variables verifier and type converter."
 authors = ["Exenifix"]
 readme = "README.md"

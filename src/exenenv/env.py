@@ -1,8 +1,10 @@
 import os
+import typing
+from types import UnionType
 from typing import Any, Callable, TypeVar
 
 from .convertors import conv_bool
-from .errors import ConversionError, UnloadedVariables
+from .errors import BadConverter, ConversionError, UnionConversionError, UnloadedVariables
 
 T = TypeVar("T")
 MISSING = object()
@@ -10,20 +12,37 @@ MISSING = object()
 
 class EnvVar:
     def __init__(
-        self, *, default: Any = MISSING, converter: Callable[[str], T] | None = None, env_name: str | None = None
+        self, *, default: Any = MISSING, converter: Callable[[str], T] | UnionType = None, env_name: str | None = None
     ):
-        """Environment variable class to configure variable conversion and loading.
+        """
+        Environment variable class to configure variable conversion and loading.
 
         :param default: The default value to assign if the variable is unset.
-        :param converter: Converter function that converts the string to required type.
+        :param converter: Union of callables or a single callable that converts the string to required type.
             Attribute typehint is used if unspecified.
-        :param env_name: Name of environment variable to search for. Attribute's name by default."""
+        :param env_name: Name of environment variable to search for. Attribute's name by default.
+        :raise TypeError: Bad ``converter`` type.
+        """
+        if converter is not None and not callable(converter) and not isinstance(converter, UnionType):
+            raise BadConverter(converter)
+
         self.default = default
         self.converter = converter
         self.env_name = env_name
 
     def convert(self, arg: str) -> T:
-        return self.converter(arg)
+        if callable(self.converter):
+            return self.converter(arg)
+        if isinstance(self.converter, UnionType):
+            exceptions: list[Exception] = []
+            for t in self.converter.__args__:
+                try:
+                    conv = t if t is not bool else conv_bool
+                    return conv(arg)
+                except Exception as e:
+                    exceptions.append(e)
+            raise UnionConversionError(arg, self.converter, exceptions)
+        raise BadConverter(self.converter)
 
     @property
     def required(self) -> bool:
@@ -35,7 +54,7 @@ class EnvironmentProfile:
 
     def __init_subclass__(cls, **kwargs) -> None:
         cls._env_vars: dict[str, EnvVar] = {}
-        for name, _type in cls.__annotations__.items():
+        for name, _type in typing.get_type_hints(cls).items():
             if _type is bool:
                 _type = conv_bool
             default = getattr(cls, name, MISSING)
@@ -68,8 +87,10 @@ class EnvironmentProfile:
             elif value is not None:
                 try:
                     setattr(self, name, var.convert(value))
+                except (UnionConversionError, BadConverter) as e:
+                    raise e
                 except Exception:
-                    raise ConversionError(value, var.converter)
+                    raise ConversionError(value, typing.cast(var.converter, Callable[[str], Any]))
 
         if raise_exc and len(unloaded) > 0:
             raise UnloadedVariables(unloaded)

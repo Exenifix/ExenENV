@@ -66,3 +66,15 @@ def test_envvar():
     assert env.DEFAULT_VAR == 10
     assert env.alt_name_var == 40
     assert env.CONVERTER_VAR == ["one", "two"]
+
+
+def test_union():
+    class Environment(EnvironmentProfile):
+        UNION_VAR: int | str
+        OPTIONAL_VAR: float | None = None
+
+    os.environ.update({"UNION_VAR": "union"})
+    env = Environment()
+    env.load()
+    assert env.UNION_VAR == "union"
+    assert env.OPTIONAL_VAR is None

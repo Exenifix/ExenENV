@@ -66,3 +66,30 @@ env.DEFAULT_VALUE_VAR=20
 env.OTHER_VAR=40
 env.CONVERTER_VAR=['gamer', 'coder', 'python']
 ```
+
+## Union Typehints
+Since `v1.2`, library supports converting to **one of provided types**.
+```python
+import os
+from exenenv import EnvironmentProfile
+
+os.environ.update({
+    "UNION_VAR": "union"
+})
+
+
+class Environment(EnvironmentProfile):
+    UNION_VAR: int | str
+    OPTIONAL_VAR: float | None = None
+
+
+env = Environment()
+env.load()
+
+print(f"{env.UNION_VAR=}\n{env.OPTIONAL_VAR=}")
+```
+```
+env.UNION_VAR='union'
+env.OPTIONAL_VAR=None
+```
+In this case, converting to `UNION_VAR` to `int`, so library used next provided type. Default value for `OPTIONAL_VAR` still has to be declared explicitly.
